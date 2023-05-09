@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+</head>
+<body>
+	<script>localStorage.setItem("JWT", "no JWT")</script>
+	<label>Username:</label>
+	<input type="text" id="username">
+	<br>
+	<label>Password:</label>
+	<input type="password" id="password">
+	<br>
+	<label>E-mail:</label>
+	<input type="text" id="email">
+	<br>
+	<input type="submit" value="Sign In" onclick="signIn()">
+	<input type="submit" value="Register" onclick="signUp()">
+	<br>
+	<input type="submit" value="Public resource" onclick="publicResource()">
+	<input type="submit" value="User resource" onclick="userResource()">
+	<input type="submit" value="Admin resource" onclick="adminResource()">
+	
+	<br>
+	<label>Output:</label>
+	<br>
+	<textarea id="output" rows="1" cols="50"></textarea> 
+	<br>
+	<label>JWT:</label>
+	<br>
+	<label id = "jwtplace">no JWT</label>
+	<br>
+	<label>Role:</label>
+	<br>
+	<label id = "roleplace">no Role</label>
+	<br>
+	<input type="submit" value="Log Out" onclick="logOut()">
+		
+	<script>
+		const cyrb53 = (str, seed = 0) => {
+			let h1 = 0xdeadbeef ^ seed,
+			  h2 = 0x41c6ce57 ^ seed;
+			for (let i = 0, ch; i < str.length; i++) {
+			  ch = str.charCodeAt(i);
+			  h1 = Math.imul(h1 ^ ch, 2654435761);
+			  h2 = Math.imul(h2 ^ ch, 1597334677);
+			}
+
+			h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+			h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+
+			return 4294967296 * (2097151 & h2) + (h1 >>> 0);
+		  };
+		  
+		  const validateEmail = (email) => {
+				return String(email)
+				  .toLowerCase()
+				  .match(
+					/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+				  );
+			  };
+	</script>
+	
+	<script>
+		async function signUp()
+		{	
+			var username = document.getElementById('username').value;
+			var password = cyrb53(document.getElementById('password').value);
+			var email = document.getElementById('email').value;
+			
+			if (validateEmail(email))
+			{
+				var result = `{"username": "` + username + `", "password": "` + password + `", "email": "` + email + `"}`;
+				const response = await fetch('http://localhost:8080/piateMaven/webresources/RestService/auth/signup', {
+					method: 'POST',
+					headers: {
+					  'Accept': 'application/json',
+					  'Content-Type': 'application/json'
+					},
+					body: result
+				  });
+
+				const data = await response.json();
+				document.getElementById('output').textContent = data.Result;
+			}
+			else
+			{
+				document.getElementById('output').textContent = "Invalid email";
+			}
+		}		
+	</script>
+	
+	<script>
+		async function signIn()
+		{	
+			var username = document.getElementById('username').value;
+			var password = cyrb53(document.getElementById('password').value);
+			
+			var result = `{"username": "` + username + `", "password": "` + password + `", "email": "` + email + `"}`;
+			const response = await fetch('http://localhost:8080/piateMaven/webresources/RestService/auth/signin', {
+				method: 'POST',
+				headers: {
+				  'Accept': 'application/json',
+				  'Content-Type': 'application/json'
+				},
+				body: result
+			  });
+
+			const data = await response.json();
+			localStorage.JWT = data.JWT;
+			document.getElementById('output').textContent = data.Result;
+			document.getElementById('jwtplace').textContent = data.JWT;
+			document.getElementById('roleplace').textContent = data.Role;
+			
+		}		
+	</script>
+	
+	<script>
+		function logOut()
+		{	
+			document.getElementById('output').textContent = "You have been logged out";
+			localStorage.JWT = "no JWT";
+			document.getElementById('jwtplace').textContent = "no JWT";
+			document.getElementById('roleplace').textContent = "no Role";
+			
+		}		
+	</script>
+	
+	<script>
+		async function userResource()
+		{	
+			var result = `{"JWT": "` + localStorage.JWT + `"}`;
+			const response = await fetch('http://localhost:8080/piateMaven/webresources/RestService/resource/user', {
+				method: 'POST',
+				headers: {
+				  'Accept': 'application/json',
+				  'Content-Type': 'application/json'
+				},
+				body: result
+			  });
+				
+			const data = await response.json();
+			document.getElementById('output').textContent = data.Result;
+		}	 
+		postData();			
+	</script>
+	
+	<script>
+		async function adminResource()
+		{	
+			var result = `{"JWT": "` + localStorage.JWT + `"}`;
+			const response = await fetch('http://localhost:8080/piateMaven/webresources/RestService/resource/admin', {
+				method: 'POST',
+				headers: {
+				  'Accept': 'application/json',
+				  'Content-Type': 'application/json'
+				},
+				body: result
+			  });
+				
+			const data = await response.json();
+			document.getElementById('output').textContent = data.Result;
+		}	 			
+	</script>
+	
+	<script>
+		async function publicResource()
+		{
+			const response = await fetch("http://localhost:8080/piateMaven/webresources/RestService/resource/public");
+			const data = await response.json();
+			document.getElementById('output').textContent = data.Result;
+		}
+	</script>
+</body>
+</html>
